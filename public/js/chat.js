@@ -105,6 +105,8 @@ const renderMessage = (message, username = '') => {
 
 //render the list
 
+// okeydokey
+
 const renderUserList = (username, online) => {
   const html = Mustache.render(usersListTemplate, {
     username,
