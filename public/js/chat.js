@@ -7,6 +7,12 @@ const $sendMessageButton = document.querySelector('#send-message-btn')
 const $usersList = document.querySelector('.users-list')
 const $userDisplayName = document.querySelector('.user-display-name')
 const $myDisplayName = document.querySelector('.my-display-name')
+const $myDisplayPic = document.querySelector('.my-display-pic')
+const $userDisplayPic = document.querySelector('.user-display-pic')
+const $uploadWindow = document.querySelector('.image-upload')
+const $closeUploadWindowBtn = document.querySelector('.image-upload .close-btn')
+
+const $imageUploadForm = document.querySelector('.image-upload form')
 
 let currentUser = null;
 
@@ -24,6 +30,8 @@ let list = []
 socket.emit('createNewUser', {username});
 
 $myDisplayName.textContent = myUsername;
+$myDisplayPic.style.backgroundImage = `url('../uploads/${myUsername}.jpg')`
+
 
 // Update chat area on message sent
 $sendMessageButton.addEventListener('click', (e) => {
@@ -144,6 +152,7 @@ $usersList.addEventListener('click', (e) => {
   li.classList.add('selected')
   li.children[1].classList.remove('new-message')
   
+  
 
   socket.emit('getMessages', myUsername, currentUser ,(msg) => {
     updateChatWindow(msg, currentUser)
@@ -156,10 +165,49 @@ const updateChatWindow = (messages, username) => {
   console.log(messages)
   $userDisplayName.textContent = username
   $chatArea.innerHTML = ""
-  messages.forEach((msg) => {
-    if (msg.fromUser === myUsername)
-      renderMessage(msg.message)
-    else 
-      renderMessage(msg.message, username)
-  })
+  $userDisplayPic.style.backgroundImage = `url('../uploads/${username}.jpg')`
+  if (messages) {
+    messages.forEach((msg) => {
+      if (msg.fromUser === myUsername)
+        renderMessage(msg.message)
+      else 
+        renderMessage(msg.message, username)
+    })
+  }
+  
 }
+
+
+// change dp
+$myDisplayPic.addEventListener('click', () => {
+  $uploadWindow.style.display = 'block';
+})
+
+$closeUploadWindowBtn.addEventListener('click', () => {
+  $uploadWindow.style.display = 'none';
+})
+
+
+$imageUploadForm.addEventListener('submit', (e) => {
+
+  e.preventDefault();
+
+  
+    const fileInput = document.querySelector('#image') ;
+  const formData = new FormData();
+
+  formData.append('image', fileInput.files[0])
+  formData.append('username', myUsername)
+
+  const options = {
+    method: 'POST',
+    body: formData,
+  };
+
+  fetch('/upload', options).then(() => {
+    $closeUploadWindowBtn.click();
+    document.location.reload()
+  })
+  
+})
+

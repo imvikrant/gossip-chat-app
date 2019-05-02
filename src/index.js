@@ -1,12 +1,21 @@
 const http = require('http')
 const path = require('path')
+const url = require('url')
 
 const express = require('express')
 const socketio = require('socket.io')
+const multer = require('multer')
+const sharp = require('sharp')
 
 const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
+
+const storage = multer.memoryStorage()
+
+const upload = multer({
+  storage: storage
+}).single('image');
 
 // custom requires
 const { Message } = require('./utils/message')
@@ -23,7 +32,30 @@ app.use(express.static(publicDir))
 const users = new Users();
 const messages = new Messages();
 
+app.post('/upload', (req, res) => {
+  upload(req, res, (err) => {
+ 
+    if (err) 
+      res.send('eerrror')
+    else {
+      sharp(req.file.buffer)
+      .jpeg()
+      .resize(100, 100)
+      .toFile(publicDir + '/uploads/' + req.body.username + '.jpg', (err) => {
+        if (err) {
+          console.log('Error', err)
+          res.json({error: err})
+        }
+        else
+          console.log('File uploaded with success')
+          res.json({success: true})
+      })
+    }
+  })
+})
+
 /*********************/
+
 
 io.on('connection', (socket) => {
  
@@ -64,6 +96,8 @@ io.on('connection', (socket) => {
 
     if (msg)
       callback(msg)
+    else
+      callback(null)
   })
 
   socket.on('addUser', (username) => {
